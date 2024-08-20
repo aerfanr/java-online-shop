@@ -7,7 +7,7 @@ public class Transaction {
     private String id;
     private LocalDate date;
     private User buyer;
-    private Seller seller;
+    private User seller;
     private ArrayList<Product> products;
     private double totalPrice;
     private double discountCodePrice;

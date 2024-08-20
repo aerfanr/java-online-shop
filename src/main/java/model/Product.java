@@ -8,7 +8,7 @@ public class Product {
     private InventoryStatus inventoryStatus;
     private String name;
     private String brandName;
-    private Seller seller;
+    private User seller;
     private double price;
     private Category category;
     private ArrayList<Rating> ratings = new ArrayList<>();
