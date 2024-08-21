@@ -11,7 +11,8 @@ public class CLIProfilePhase {
         TRANSACTIONS("Past transactions"),
         BALANCE("Current balance"),
         LOGOUT("Log out"),
-        EXIT("Exit");
+        EXIT("Exit"),
+        BACK("Back");
 
         private final String description;
 
@@ -36,13 +37,16 @@ public class CLIProfilePhase {
             switch (profileChoice) {
                 case USER_DATA -> new CLIUserData(user);
                 case CART -> CLIView.error("Not implemented yet");
-                case BALANCE -> CLIView.info("Balance: " + user.getBalance());
-                case TRANSACTIONS -> CLIView.error("Not implemented yet");
+                case BALANCE -> CLIView.info("Balance: " + user.getBalanceString());
+                case TRANSACTIONS -> CLIView.error("Not implemented yet.");
                 case LOGOUT -> {
                     throw new LoggedOutExeption();
                 }
                 case EXIT -> {
                     throw new ExitExeption();
+                }
+                case BACK -> {
+                    return;
                 }
             }
         }

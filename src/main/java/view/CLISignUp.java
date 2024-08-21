@@ -16,22 +16,7 @@ public class CLISignUp {
 
         username = CLIView.prompt("Enter new username: ");
 
-        while (true) {
-            password = CLIView.prompt("Enter new password: ");
-            String repeatPassword = CLIView.prompt("Repeat new password: ");
-
-            if (!this.password.equals(repeatPassword)) {
-                CLIView.error("Passwords do not match. Please try again.");
-                continue;
-            }
-
-            if (password.length() < 8) {
-                CLIView.error("Password must be at least 8 characters long. Please try again.");
-                continue;
-            }
-
-            break;
-        }
+        password = CLIView.newPasswordPrompt("Choose a password: ");
 
         firstName = CLIView.prompt("Enter first name: ");
         lastName = CLIView.prompt("Enter last name: ");

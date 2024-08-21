@@ -13,7 +13,7 @@ public class CLI {
             }
 
             try {
-                CLIProfilePhase profilePhase = new CLIProfilePhase(loggedInUser);
+                new CLIProfilePhase(loggedInUser);
             } catch (LoggedOutExeption e) {
                 loggedInUser = null;
             } catch (ExitExeption e) {

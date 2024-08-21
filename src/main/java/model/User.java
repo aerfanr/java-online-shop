@@ -71,10 +71,7 @@ public class User {
             throw new IllegalArgumentException("Invalid user data");
         }
 
-        if (password.length() < 8) {
-            throw new IllegalArgumentException("Password must be at least 8 characters long");
-        }
-        String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
+        String passwordHash = hashPassword(password);
 
         Connection connection = SQLiteConnection.getConnection();
 
@@ -114,6 +111,14 @@ public class User {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String hashPassword(String password) {
+        if (password.length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters long");
+        }
+
+        return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
     public static boolean adminExists() {
@@ -184,11 +189,94 @@ public class User {
         }
     }
 
+    public void update() {
+        Connection connection = SQLiteConnection.getConnection();
+        String sql = "UPDATE users " +
+                "SET first_name = ?, last_name = ?, email = ?, phone_number = ?, company_name = ?, seller_status = ?, balance = ? " +
+                "WHERE username = ?";
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, firstName);
+            statement.setString(2, lastName);
+            statement.setString(3, email);
+            statement.setString(4, phoneNumber);
+            statement.setString(5, companyName);
+            statement.setString(6, sellerStatus == null ? null : sellerStatus.toString());
+            statement.setDouble(7, balance);
+            statement.setString(8, username);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setPassword(String password) {
+        String passwordHash = hashPassword(password);
+        Connection connection = SQLiteConnection.getConnection();
+        String sql = "UPDATE users SET password_hash = ? WHERE username = ?";
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, passwordHash);
+            statement.setString(2, username);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
     public String getUsername() {
         return username;
     }
 
-    public String getBalance() {
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getRole() {
+        return role.toString();
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public String getSellerStatus() {
+        return sellerStatus == null ? null : sellerStatus.toString();
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public String getBalanceString() {
         return String.format("$%.2f", balance);
     }
 }

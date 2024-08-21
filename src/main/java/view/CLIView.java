@@ -1,5 +1,6 @@
 package view;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class CLIView {
@@ -34,8 +35,33 @@ public class CLIView {
         info(message);
         return scanner.nextLine();
     }
-    
+
+    public static String newPasswordPrompt(String message) {
+        if (scanner == null) {
+            scanner = new Scanner(System.in);
+        }
+        info(message);
+        String newPassword = scanner.nextLine();
+        info("Confirm password: ");
+        String confirmPassword = scanner.nextLine();
+        if (!newPassword.equals(confirmPassword)) {
+            error("Passwords do not match. Please try again.");
+            return newPasswordPrompt(message);
+        }
+
+        if (newPassword.length() < 8) {
+            error("Password must be at least 8 characters long. Please try again.");
+            return newPasswordPrompt(message);
+        }
+
+        return newPassword;
+    }
+
     public static <E extends Enum<E>> E select(Class<E> enumClass, String message) {
+        return select(enumClass, message, new ArrayList<>());
+    }
+
+    public static <E extends Enum<E>> E select(Class<E> enumClass, String message, ArrayList<E> disabledOptions) {
         if (scanner == null) {
             scanner = new Scanner(System.in);
         }
@@ -44,9 +70,14 @@ public class CLIView {
         while (true) {
             info(message);
 
-            int i = 1;
+            int i = 0;
             for (E value : enumClass.getEnumConstants()) {
-                System.out.println(i++ + ". " + value);
+                i++;
+                if (disabledOptions.contains(value)) {
+                    continue;
+                }
+
+                System.out.println(i + ". " + value);
             }
 
             newline();
