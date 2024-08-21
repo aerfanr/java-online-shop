@@ -187,4 +187,8 @@ public class User {
     public String getUsername() {
         return username;
     }
+
+    public String getBalance() {
+        return String.format("$%.2f", balance);
+    }
 }
