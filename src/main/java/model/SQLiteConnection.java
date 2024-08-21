@@ -60,8 +60,13 @@ public class SQLiteConnection {
                         + " balance DOUBLE NOT NULL DEFAULT 0.0)"
                 );
             }
+            if (currentVersion < 2) {
+                connection.createStatement().executeUpdate(
+                        "ALTER TABLE users ADD COLUMN seller_status TEXT"
+                );
+            }
 
-            connection.createStatement().executeUpdate("PRAGMA user_version = " + 1);
+            connection.createStatement().executeUpdate("PRAGMA user_version = " + 2);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

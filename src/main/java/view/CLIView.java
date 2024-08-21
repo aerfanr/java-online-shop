@@ -34,6 +34,35 @@ public class CLIView {
         info(message);
         return scanner.nextLine();
     }
+    
+    public static <E extends Enum<E>> E select(Class<E> enumClass, String message) {
+        if (scanner == null) {
+            scanner = new Scanner(System.in);
+        }
+
+        int choice;
+        while (true) {
+            info(message);
+
+            int i = 1;
+            for (E value : enumClass.getEnumConstants()) {
+                System.out.println(i++ + ". " + value);
+            }
+
+            newline();
+            choice = scanner.nextInt();
+            scanner.nextLine();
+            if (choice < 1 || choice > enumClass.getEnumConstants().length) {
+                error("Invalid choice. Please try again.");
+                newline();
+                continue;
+            }
+
+            break;
+        }
+
+        return enumClass.getEnumConstants()[choice - 1];
+    }
 
     public static void newline() {
         System.out.println();
@@ -44,18 +73,19 @@ public class CLIView {
         System.out.flush();
     }
 
+    private static final int dividerSize = 40;
     public static void divider(String title) {
         newline();
-        if (title.length() > 20) {
+        if (title.length() > dividerSize) {
             System.out.println(title);
         } else {
-            System.out.println("-".repeat((20 - title.length()) / 2 + title.length() % 2)
+            System.out.println("-".repeat((dividerSize - title.length()) / 2 + title.length() % 2)
                             + title
-                            + "-".repeat((20 - title.length()) / 2)
+                            + "-".repeat((dividerSize - title.length()) / 2)
             );
         }
     }
     public static void divider() {
-        System.out.println("-".repeat(20));
+        System.out.println("-".repeat(dividerSize));
     }
 }

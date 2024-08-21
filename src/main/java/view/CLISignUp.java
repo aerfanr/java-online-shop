@@ -1,7 +1,5 @@
 package view;
 
-import java.util.Scanner;
-
 public class CLISignUp {
     public String username;
     public String password;
@@ -9,6 +7,9 @@ public class CLISignUp {
     public String lastName;
     public String email;
     public String phoneNumber;
+    public String companyName;
+
+    public boolean isSeller = false;
 
     public CLISignUp() {
         CLIView.divider("Sign Up");
@@ -37,6 +38,11 @@ public class CLISignUp {
 
         email = CLIView.prompt("Enter email: ");
         phoneNumber = CLIView.prompt("Enter phone number: ");
+
+        isSeller = CLIView.prompt("Do you want to request seller account? (y/n): ").equalsIgnoreCase("y");
+        if (isSeller) {
+            companyName = CLIView.prompt("Enter company name: ");
+        }
 
         CLIView.info("Signing up...");
         CLIView.divider();
