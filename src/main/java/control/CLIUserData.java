@@ -1,6 +1,5 @@
 package control;
 
-import model.SellerStatus;
 import model.User;
 import view.CLIView;
 
@@ -53,7 +52,7 @@ public class CLIUserData {
             CLIView.info("Email: " + user.getEmail());
             CLIView.info("Phone number: " + user.getPhoneNumber());
             CLIView.info("Balance: " + user.getBalanceString());
-            CLIView.info("Role: " + user.getRole());
+            CLIView.info("Role: " + user.getRoleString());
             if (user.getSellerStatus() != null) {
                 CLIView.info("Seller status: " + user.getSellerStatus());
                 CLIView.info("Company name: " + user.getCompanyName());

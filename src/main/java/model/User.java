@@ -42,6 +42,18 @@ public class User {
         this.role = role;
     }
 
+    public static void deleteByUsername(String username) {
+        Connection connection = SQLiteConnection.getConnection();
+        String sql = "DELETE FROM users WHERE username = ?";
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, username);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void setBalance(Double balance) {
         this.balance = balance;
     }
@@ -51,10 +63,17 @@ public class User {
     }
 
     public void setSellerStatus(SellerStatus sellerStatus) {
+        if (sellerStatus == null) {
+            this.sellerStatus = null;
+            return;
+        }
+        assert role != Role.ADMIN;
         this.sellerStatus = sellerStatus;
 
         if (sellerStatus == SellerStatus.APPROVED) {
             this.role = Role.SELLER;
+        } else {
+            this.role = Role.BUYER;
         }
     }
 
@@ -189,10 +208,62 @@ public class User {
         }
     }
 
+    public static ArrayList<String> getAllUsernames() {
+        Connection connection = SQLiteConnection.getConnection();
+        String sql = "SELECT username FROM users";
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            ResultSet rs = statement.executeQuery();
+            ArrayList<String> usernames = new ArrayList<>();
+            while (rs.next()) {
+                usernames.add(rs.getString("username"));
+            }
+            return usernames;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static ArrayList<User> getAllUsersBasic() {
+        Connection connection = SQLiteConnection.getConnection();
+        String sql = "SELECT * FROM users";
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            ResultSet rs = statement.executeQuery();
+            ArrayList<User> users = new ArrayList<>();
+            while (rs.next()) {
+                User user = new User(
+                        rs.getString("username"),
+                        rs.getString("first_name"),
+                        rs.getString("last_name"),
+                        rs.getString("email"),
+                        rs.getString("phone_number"),
+                        Role.valueOf(rs.getString("role"))
+                );
+                if (rs.getString("seller_status") != null) {
+                    user.setCompanyName(rs.getString("company_name"));
+                    user.setSellerStatus(SellerStatus.valueOf(rs.getString("seller_status")));
+                }
+                user.setBalance(rs.getDouble("balance"));
+                users.add(user);
+            }
+            return users;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void update() {
         Connection connection = SQLiteConnection.getConnection();
         String sql = "UPDATE users " +
-                "SET first_name = ?, last_name = ?, email = ?, phone_number = ?, company_name = ?, seller_status = ?, balance = ? " +
+                "SET first_name = ?, " +
+                "last_name = ?, " +
+                "email = ?, " +
+                "phone_number = ?, " +
+                "company_name = ?, " +
+                "seller_status = ?, " +
+                "balance = ?, " +
+                "role = ? " +
                 "WHERE username = ?";
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -203,7 +274,8 @@ public class User {
             statement.setString(5, companyName);
             statement.setString(6, sellerStatus == null ? null : sellerStatus.toString());
             statement.setDouble(7, balance);
-            statement.setString(8, username);
+            statement.setString(8, role.toString());
+            statement.setString(9, username);
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -260,7 +332,11 @@ public class User {
         return phoneNumber;
     }
 
-    public String getRole() {
+    public Role getRole() {
+        return role;
+    }
+
+    public String getRoleString() {
         return role.toString();
     }
 
@@ -268,8 +344,12 @@ public class User {
         return companyName;
     }
 
-    public String getSellerStatus() {
-        return sellerStatus == null ? null : sellerStatus.toString();
+    public SellerStatus getSellerStatus() {
+        return sellerStatus;
+    }
+
+    public String getSellerStatusString() {
+        return sellerStatus == null ? "Not requested" : sellerStatus.toString();
     }
 
     public double getBalance() {

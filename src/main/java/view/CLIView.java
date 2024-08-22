@@ -1,7 +1,9 @@
 package view;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Scanner;
+import java.util.function.Function;
 
 public class CLIView {
     private static Scanner scanner = null;
@@ -118,5 +120,33 @@ public class CLIView {
     }
     public static void divider() {
         System.out.println("-".repeat(dividerSize));
+    }
+
+    @SafeVarargs
+    public static <E> void sortedList(ArrayList<E> list, Comparator<E> comparator, Function<E, String>... fields) {
+        list.sort(comparator);
+
+        int[] lengths = new int[fields.length];
+        for (E e : list) {
+            for (int i = 0; i < fields.length; i++) {
+                int valueLength = fields[i].apply(e).length();
+                if (lengths[i] < valueLength) {
+                    lengths[i] = valueLength;
+                }
+            }
+        }
+
+        for (E e : list) {
+            System.out.print("  ");
+            for (int i = 0; i < fields.length; i++) {
+                String value = fields[i].apply(e);
+                System.out.print(" " + fields[i].apply(e) + " ".repeat(lengths[i] - value.length() + 4));
+                if (i != fields.length - 1) {
+                    System.out.print("|");
+                }
+            }
+            System.out.println();
+        }
+        newline();
     }
 }
