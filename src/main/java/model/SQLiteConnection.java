@@ -87,7 +87,13 @@ public class SQLiteConnection {
                 );
             }
 
-            connection.createStatement().executeUpdate("PRAGMA user_version = " + 3);
+            if (currentVersion < 4) {
+                connection.createStatement().executeUpdate(
+                        "ALTER TABLE products ADD COLUMN seller TEXT REFERENCES users(username)"
+                );
+            }
+
+            connection.createStatement().executeUpdate("PRAGMA user_version = " + 4);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

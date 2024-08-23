@@ -15,6 +15,7 @@ public class CLIProfilePhase {
         BALANCE("Current balance"),
         MANAGE_USERS("Manage users"),
         MANAGE_CATEGORIES("Manage categories"),
+        MANAGE_PRODUCTS("Manage products"),
         LOGOUT("Log out"),
         EXIT("Exit"),
         BACK("Back");
@@ -41,6 +42,9 @@ public class CLIProfilePhase {
                 disabledOptions.add(ProfileChoice.MANAGE_USERS);
                 disabledOptions.add(ProfileChoice.MANAGE_CATEGORIES);
             }
+            if (user.getRole() == Role.BUYER) {
+                disabledOptions.add(ProfileChoice.MANAGE_PRODUCTS);
+            }
 
             ProfileChoice profileChoice = CLIView.select(
                     ProfileChoice.class,
@@ -54,6 +58,7 @@ public class CLIProfilePhase {
                 case TRANSACTIONS -> CLIView.error("Not implemented yet.");
                 case MANAGE_USERS -> new CLIManageUsers();
                 case MANAGE_CATEGORIES -> new CLIManageCategories();
+                case MANAGE_PRODUCTS -> new CLIManageProducts(user);
                 case LOGOUT -> {
                     throw new LoggedOutExeption();
                 }
