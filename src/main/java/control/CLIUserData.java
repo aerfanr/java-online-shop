@@ -57,7 +57,6 @@ public class CLIUserData {
                 CLIView.info("Seller status: " + user.getSellerStatus());
                 CLIView.info("Company name: " + user.getCompanyName());
             }
-            CLIView.info("Seller status: " + user.getSellerStatus());
 
             ProfileChoice profileChoice = CLIView.select(
                     ProfileChoice.class,

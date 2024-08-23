@@ -1,20 +1,17 @@
 package control;
 
-import model.Product;
-import model.Role;
-import model.User;
+import model.*;
 import view.CLIView;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class CLIManageProducts {
 
+    private User loggedInUser;
     private Comparator<Product> sortBy = Comparator.comparing(Product::getName);
     private Boolean reverseSorting = false;
-    private int menuLevel = 1;
+    private Boolean running = true;
 
     private enum sortByField {
         ID(Comparator.comparing(Product::getId)),
@@ -37,7 +34,8 @@ public class CLIManageProducts {
         SORT_BY("Change sorting", CLIManageProducts::changeSorting),
         REVERSE_SORTING("Reverse sorting", (CLIManageProducts c) -> c.reverseSorting = !c.reverseSorting),
         VIEW_PRODUCT("View and manage product", CLIManageProducts::viewProduct),
-        BACK("Back", (CLIManageProducts c) -> c.menuLevel = 0);
+        ADD_PRODUCT("Add new product", CLIManageProducts::addProduct),
+        BACK("Back", (CLIManageProducts c) -> c.running = false);
 
         private final String text;
         private final Consumer<CLIManageProducts> action;
@@ -58,38 +56,57 @@ public class CLIManageProducts {
 
     }
 
-    private void viewProduct() {
-        String id = CLIView.prompt("Enter product ID");
-        int currentMenuLevel = ++menuLevel;
+    private void addProduct() {
+        try {
+            String name = CLIView.prompt("Name");
+            String brandName = CLIView.prompt("Brand name");
+            String description = CLIView.prompt("Description");
+            String price = CLIView.prompt("Price");
+            Category category = Category.load(Integer.parseInt(CLIView.prompt("Category ID")));
 
-        while (menuLevel == currentMenuLevel) {
-            try {
-                Product product = Product.load(Integer.parseInt(id));
-
-                CLIView.divider("View product");
-                CLIView.info("ID: " + product.getId());
-                CLIView.info("Name: " + product.getName());
-                CLIView.info("Price: " + product.getPriceString());
-                CLIView.info("Status: " + product.getStatus());
-                CLIView.info("Category: " + product.getCategoryName());
-                CLIView.info("Seller: " + product.getSeller().getUsername());
-                CLIView.info("Inventory status: " + product.getInventoryStatus());
-                CLIView.info("Properties: ");
-                if (product.getValidPropertiesAsMap().isEmpty()) {
-                    CLIView.sortedList(
-                            product.getValidPropertiesAsMap().entrySet().stream().toList(),
-                            Comparator.comparing(Map.Entry<String, String>::getKey),
-                            Map.Entry::getKey,
-                            Map.Entry::getValue
-                    );
-                }
-            } catch (Exception e) {
-                CLIView.error("Product not found: " + e.getMessage());
-                menuLevel = currentMenuLevel - 1;
+            HashMap<String, String> properties = new HashMap<>();
+            for (String key : category.getProperties()) {
+                properties.put(key, CLIView.prompt(key));
             }
 
-            menuLevel = currentMenuLevel - 1;
+            User seller;
+            if (loggedInUser.getRole() == Role.ADMIN) {
+                seller = User.load(CLIView.prompt("Seller"));
+            } else {
+                seller = loggedInUser;
+            }
+
+            Product product = new Product(
+                    0,
+                    ProductStatus.CREATION_VERIFICATION,
+                    InventoryStatus.IN_STOCK,
+                    name,
+                    brandName,
+                    description,
+                    seller,
+                    Double.parseDouble(price),
+                    category,
+                    properties
+            );
+
+            product.requestInsert();
+        } catch (Exception e) {
+            CLIView.error("Adding product failed: " + e.getMessage());
         }
+    }
+
+    private void viewProduct() {
+       int id = Integer.parseInt(CLIView.prompt("Enter product ID"));
+       try {
+           Product product = Product.load(id);
+           if (!Objects.equals(product.getSeller().getUsername(), loggedInUser.getUsername())
+                           && loggedInUser.getRole() != Role.ADMIN) {
+               throw new Exception("You do not have permission to manage this product");
+           }
+           new CLIProductData(product);
+       } catch (Exception e) {
+           CLIView.error("Managing product failed: " + e.getMessage());
+       }
     }
 
     private void changeSorting() {
@@ -97,7 +114,9 @@ public class CLIManageProducts {
     }
 
     public CLIManageProducts(User user) {
-        while (menuLevel == 1) {
+        this.loggedInUser = user;
+
+        while (running) {
             CLIView.divider("Manage products");
 
             List<Product> products = null;

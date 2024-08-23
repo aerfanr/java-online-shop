@@ -2,10 +2,7 @@ package model;
 
 import org.json.JSONObject;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,12 +14,14 @@ public class Product {
     private InventoryStatus inventoryStatus;
     private String name;
     private String brandName;
+    private String description;
     private User seller;
     private double price;
     private Category category;
 //    private ArrayList<Rating> ratings = new ArrayList<>(); // TODO
 //    private ArrayList<Comment> comments = new ArrayList<>(); // TODO
     private Map<String, String> properties = Map.of();
+    private int ref;
 
     public Product(
             int id,
@@ -30,6 +29,7 @@ public class Product {
             InventoryStatus inventoryStatus,
             String name,
             String brandName,
+            String description,
             User seller,
             double price,
             Category category,
@@ -40,6 +40,7 @@ public class Product {
         this.inventoryStatus = inventoryStatus;
         this.name = name;
         this.brandName = brandName;
+        this.description = description;
         this.seller = seller;
         this.price = price;
         this.category = category;
@@ -68,17 +69,20 @@ public class Product {
         for (String key : properties.keySet()) {
             propertiesMap.put(key, properties.getString(key));
         }
-        return new Product(
+        Product product = new Product(
                 rs.getInt("id"),
                 ProductStatus.valueOf(rs.getString("status")),
                 InventoryStatus.valueOf(rs.getString("inventory")),
                 rs.getString("name"),
                 rs.getString("brand_name"),
+                rs.getString("description"),
                 User.load(rs.getString("seller")),
                 rs.getDouble("price"),
                 Category.load(rs.getInt("category_id")),
                 propertiesMap
         );
+        product.ref = rs.getInt("ref");
+        return product;
     }
 
     public static List<Product> getAll() {
@@ -142,6 +146,10 @@ public class Product {
         return brandName;
     }
 
+    public Category getCategory() {
+        return category;
+    }
+
     public String getCategoryName() {
         return category.getName();
     }
@@ -160,5 +168,82 @@ public class Product {
 
     public User getSeller() {
         return seller;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public void setProperty(String key, String value) {
+        if (category.getProperties().contains(key)) {
+            properties.put(key, value);
+        } else {
+            throw new IllegalArgumentException("Invalid property");
+        }
+    }
+
+    public void delete() {
+        Connection connection = SQLiteConnection.getConnection();
+        try {
+            String sql = "DELETE FROM products WHERE ref = ?";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, String.valueOf(id));
+            statement.executeUpdate();
+
+            sql = "DELETE FROM products WHERE id = ?";
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, String.valueOf(id));
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void insert() {
+        Connection connection = SQLiteConnection.getConnection();
+
+        try {
+            String sql = "INSERT INTO products " +
+                    "(status, inventory, name, brand_name, seller, price, category_id, properties, ref, description) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, status.toString());
+            statement.setString(2, inventoryStatus.toString());
+            statement.setString(3, name);
+            statement.setString(4, brandName);
+            statement.setString(5, seller.getUsername());
+            statement.setDouble(6, price);
+            statement.setInt(7, category.getId());
+            statement.setString(8, new JSONObject(properties).toString());
+            if (ref == 0) {
+                statement.setNull(9, Types.INTEGER);
+            } else {
+                statement.setInt(9, ref);
+            }
+            statement.setString(10, description);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void requestEdit() {
+        ref = id;
+        status = ProductStatus.MODIFICATION_VERIFICATION;
+        this.insert();
+    }
+
+    public void requestInsert() {
+        ref = 0;
+        status = ProductStatus.CREATION_VERIFICATION;
+        this.insert();
     }
 }

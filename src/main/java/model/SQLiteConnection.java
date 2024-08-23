@@ -86,14 +86,18 @@ public class SQLiteConnection {
                                 + " FOREIGN KEY(category_id) REFERENCES categories(id))"
                 );
             }
-
             if (currentVersion < 4) {
                 connection.createStatement().executeUpdate(
                         "ALTER TABLE products ADD COLUMN seller TEXT REFERENCES users(username)"
                 );
             }
+            if (currentVersion < 5) {
+                connection.createStatement().executeUpdate(
+                        "ALTER TABLE products ADD COLUMN ref INTEGER REFERENCES products(id)"
+                );
+            }
 
-            connection.createStatement().executeUpdate("PRAGMA user_version = " + 4);
+            connection.createStatement().executeUpdate("PRAGMA user_version = " + 5);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
