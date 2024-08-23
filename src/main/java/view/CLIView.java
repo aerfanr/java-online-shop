@@ -2,6 +2,7 @@ package view;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Scanner;
 import java.util.function.Function;
 
@@ -123,7 +124,7 @@ public class CLIView {
     }
 
     @SafeVarargs
-    public static <E> void sortedList(ArrayList<E> list, Comparator<E> comparator, Function<E, String>... fields) {
+    public static <E> void sortedList(List<E> list, Comparator<E> comparator, Function<E, String>... fields) {
         list.sort(comparator);
 
         int[] lengths = new int[fields.length];

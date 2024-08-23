@@ -65,8 +65,29 @@ public class SQLiteConnection {
                         "ALTER TABLE users ADD COLUMN seller_status TEXT"
                 );
             }
+            if (currentVersion < 3) {
+                connection.createStatement().executeUpdate(
+                        "CREATE TABLE IF NOT EXISTS categories"
+                                + " (id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                + " properties TEXT NOT NULL,"
+                                + " name TEXT NOT NULL UNIQUE)"
+                );
+                connection.createStatement().executeUpdate(
+                        "CREATE TABLE IF NOT EXISTS products"
+                                + " (id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                + " name TEXT NOT NULL,"
+                                + " brand_name TEXT NOT NULL,"
+                                + " status TEXT NOT NULL,"
+                                + " inventory TEXT NOT NULL,"
+                                + " description TEXT NOT NULL,"
+                                + " properties TEXT NOT NULL,"
+                                + " price DOUBLE NOT NULL DEFAULT 0.0,"
+                                + " category_id INTEGER NOT NULL,"
+                                + " FOREIGN KEY(category_id) REFERENCES categories(id))"
+                );
+            }
 
-            connection.createStatement().executeUpdate("PRAGMA user_version = " + 2);
+            connection.createStatement().executeUpdate("PRAGMA user_version = " + 3);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
