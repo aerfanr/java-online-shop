@@ -3,15 +3,17 @@ package control;
 import model.Category;
 import view.CLIView;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 public class CLIManageCategories {
     private Boolean reverseSorting = false;
+    private Boolean readOnly = false;
 
     private enum Choice {
         REVERSE_SORTING("Reverse sorting"),
-        EDIT_CATEGORY("Edit category"),
+        VIEW_CATEGORY("View category"),
         ADD_CATEGORY("Add category"),
         DELETE_CATEGORY("Delete category"),
         EXIT("Exit");
@@ -28,7 +30,8 @@ public class CLIManageCategories {
         }
     }
 
-    public CLIManageCategories() {
+    public CLIManageCategories(Boolean readOnly) {
+        this.readOnly = readOnly;
         while (true) {
             CLIView.divider("Manage categories");
             CLIView.info("Categories list:");
@@ -41,14 +44,22 @@ public class CLIManageCategories {
                     Category::getName
             );
 
-            Choice choice = CLIView.select(Choice.class, "What would you like to do?");
+            Choice choice;
+            if (!readOnly) {
+                choice = CLIView.select(Choice.class, "What would you like to do?");
+            } else {
+                ArrayList<Choice> disabledChoices = new ArrayList<>();
+                disabledChoices.add(Choice.ADD_CATEGORY);
+                disabledChoices.add(Choice.DELETE_CATEGORY);
+                choice = CLIView.select(Choice.class, "What would you like to do?", disabledChoices);
+            }
 
             switch (choice) {
                 case REVERSE_SORTING -> {
                     reverseSorting = !reverseSorting;
                 }
-                case EDIT_CATEGORY -> {
-                    editCategory();
+                case VIEW_CATEGORY -> {
+                    viewCategory();
                 }
                 case ADD_CATEGORY -> {
                     addCategory();
@@ -102,18 +113,20 @@ public class CLIManageCategories {
         }
     }
 
-    private void editCategory() {
+    private void viewCategory() {
         int id = Integer.parseInt(CLIView.prompt("Enter category id"));
 
         while (true) {
             try {
                 Category category = Category.load(id);
 
-                CLIView.divider("Edit category");
+                CLIView.divider("Category info");
                 CLIView.info("Category id: " + category.getId());
                 CLIView.info("Category name: " + category.getName());
                 CLIView.info("Category properties: ");
                 CLIView.sortedList(category.getProperties(), Comparator.comparing(String::toString), String::toString);
+
+                if (readOnly) break;
 
                 EditChoice editChoice = CLIView.select(EditChoice.class, "What do you want to do?");
                 switch (editChoice) {

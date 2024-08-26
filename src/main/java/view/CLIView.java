@@ -86,7 +86,9 @@ public class CLIView {
             newline();
             choice = scanner.nextInt();
             scanner.nextLine();
-            if (choice < 1 || choice > enumClass.getEnumConstants().length) {
+            if (choice < 1
+                    || choice > enumClass.getEnumConstants().length
+                    || disabledOptions.contains(enumClass.getEnumConstants()[choice - 1])) {
                 error("Invalid choice. Please try again.");
                 newline();
                 continue;

@@ -40,10 +40,10 @@ public class CLIProfilePhase {
             ArrayList<ProfileChoice> disabledOptions = new ArrayList<>();
             if (user.getRole() != Role.ADMIN) {
                 disabledOptions.add(ProfileChoice.MANAGE_USERS);
-                disabledOptions.add(ProfileChoice.MANAGE_CATEGORIES);
             }
             if (user.getRole() == Role.BUYER) {
                 disabledOptions.add(ProfileChoice.MANAGE_PRODUCTS);
+                disabledOptions.add(ProfileChoice.MANAGE_CATEGORIES);
             }
 
             ProfileChoice profileChoice = CLIView.select(
@@ -57,7 +57,9 @@ public class CLIProfilePhase {
                 case BALANCE -> CLIView.info("Balance: " + user.getBalanceString());
                 case TRANSACTIONS -> CLIView.error("Not implemented yet.");
                 case MANAGE_USERS -> new CLIManageUsers();
-                case MANAGE_CATEGORIES -> new CLIManageCategories();
+                case MANAGE_CATEGORIES -> {
+                    new CLIManageCategories(user.getRole() != Role.ADMIN);
+                }
                 case MANAGE_PRODUCTS -> new CLIManageProducts(user);
                 case LOGOUT -> {
                     throw new LoggedOutExeption();
