@@ -360,6 +360,7 @@ public class User implements Requestable {
 
     public void reject() {
         this.sellerStatus = SellerStatus.REJECTED;
+        this.role = Role.BUYER;
         update();
     }
 
