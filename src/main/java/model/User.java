@@ -7,8 +7,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
-public class User {
+public class User implements Requestable {
     private String username;
     private String firstName;
     private String lastName;
@@ -189,23 +190,27 @@ public class User {
             if (!rs.next()) {
                 throw new IllegalArgumentException("User not found");
             }
-            User user = new User(
-                    rs.getString("username"),
-                    rs.getString("first_name"),
-                    rs.getString("last_name"),
-                    rs.getString("email"),
-                    rs.getString("phone_number"),
-                    Role.valueOf(rs.getString("role"))
-            );
-            user.setCompanyName(rs.getString("company_name"));
-            if (rs.getString("seller_status") != null) {
-                user.setSellerStatus(SellerStatus.valueOf(rs.getString("seller_status")));
-            }
-            user.setBalance(rs.getDouble("balance"));
-            return user;
+            return fromResultSet(rs);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static User fromResultSet(ResultSet rs) throws SQLException {
+        User user = new User(
+                rs.getString("username"),
+                rs.getString("first_name"),
+                rs.getString("last_name"),
+                rs.getString("email"),
+                rs.getString("phone_number"),
+                Role.valueOf(rs.getString("role"))
+        );
+        user.setCompanyName(rs.getString("company_name"));
+        if (rs.getString("seller_status") != null) {
+            user.setSellerStatus(SellerStatus.valueOf(rs.getString("seller_status")));
+        }
+        user.setBalance(rs.getDouble("balance"));
+        return user;
     }
 
     public static ArrayList<String> getAllUsernames() {
@@ -232,20 +237,7 @@ public class User {
             ResultSet rs = statement.executeQuery();
             ArrayList<User> users = new ArrayList<>();
             while (rs.next()) {
-                User user = new User(
-                        rs.getString("username"),
-                        rs.getString("first_name"),
-                        rs.getString("last_name"),
-                        rs.getString("email"),
-                        rs.getString("phone_number"),
-                        Role.valueOf(rs.getString("role"))
-                );
-                if (rs.getString("seller_status") != null) {
-                    user.setCompanyName(rs.getString("company_name"));
-                    user.setSellerStatus(SellerStatus.valueOf(rs.getString("seller_status")));
-                }
-                user.setBalance(rs.getDouble("balance"));
-                users.add(user);
+                users.add(fromResultSet(rs));
             }
             return users;
         } catch (SQLException e) {
@@ -358,5 +350,33 @@ public class User {
 
     public String getBalanceString() {
         return String.format("$%.2f", balance);
+    }
+
+    public void accept() {
+        this.sellerStatus = SellerStatus.APPROVED;
+        this.role = Role.SELLER;
+        update();
+    }
+
+    public void reject() {
+        this.sellerStatus = SellerStatus.REJECTED;
+        update();
+    }
+
+    public static List<User> getRequests() {
+        Connection connection = SQLiteConnection.getConnection();
+        try {
+            String sql = "SELECT * FROM users WHERE seller_status = ?";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, SellerStatus.PENDING.toString());
+            ResultSet rs = statement.executeQuery();
+            ArrayList<User> users = new ArrayList<>();
+            while (rs.next()) {
+                users.add(fromResultSet(rs));
+            }
+            return users;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

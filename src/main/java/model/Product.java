@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Product {
+public class Product implements Requestable {
     private int id;
     private ProductStatus status;
     private InventoryStatus inventoryStatus;
@@ -107,6 +107,24 @@ public class Product {
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, seller.getUsername());
+            ResultSet rs = statement.executeQuery();
+            List<Product> products = new ArrayList<>();
+            while (rs.next()) {
+                products.add(fromResultSet(rs));
+            }
+            return products;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static List<Product> getRequests() {
+        Connection connection = SQLiteConnection.getConnection();
+        try {
+            PreparedStatement statement = connection
+                    .prepareStatement("SELECT * FROM products WHERE status = ? OR status = ?");
+            statement.setString(1, ProductStatus.CREATION_VERIFICATION.toString());
+            statement.setString(2, ProductStatus.MODIFICATION_VERIFICATION.toString());
             ResultSet rs = statement.executeQuery();
             List<Product> products = new ArrayList<>();
             while (rs.next()) {
@@ -245,5 +263,67 @@ public class Product {
         ref = 0;
         status = ProductStatus.CREATION_VERIFICATION;
         this.insert();
+    }
+
+    public void accept() {
+        if (status == ProductStatus.VERIFIED) {
+            throw new IllegalArgumentException("Product already verified");
+        }
+
+        if (status == ProductStatus.MODIFICATION_VERIFICATION) {
+            try {
+                String sql = "UPDATE products SET " +
+                        "status = ?, " +
+                        "inventory = ?," +
+                        "name = ?, " +
+                        "brand_name = ?, " +
+                        "seller = ?, " +
+                        "price = ?, " +
+                        "category_id = ?, " +
+                        "properties = ?, " +
+                        "ref = ?, " +
+                        "description = ? " +
+                        "WHERE id = ?";
+
+                Connection connection = SQLiteConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                statement.setString(1, ProductStatus.VERIFIED.toString());
+                statement.setString(2, inventoryStatus.toString());
+                statement.setString(3, name);
+                statement.setString(4, brandName);
+                statement.setString(5, seller.getUsername());
+                statement.setDouble(6, price);
+                statement.setInt(7, category.getId());
+                statement.setString(8, new JSONObject(properties).toString());
+                statement.setNull(9, Types.INTEGER);
+                statement.setString(10, description);
+                statement.setInt(11, ref);
+                statement.executeUpdate();
+
+                delete();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            status = ProductStatus.VERIFIED;
+            try {
+                String sql = "UPDATE products SET status = ? WHERE id = ?";
+                Connection connection = SQLiteConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                statement.setString(1, status.toString());
+                statement.setInt(2, id);
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public void reject() {
+        if (status == ProductStatus.VERIFIED) {
+            throw new IllegalArgumentException("Product already verified");
+        }
+
+        delete();
     }
 }

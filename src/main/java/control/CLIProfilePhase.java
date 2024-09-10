@@ -16,6 +16,7 @@ public class CLIProfilePhase {
         MANAGE_USERS("Manage users"),
         MANAGE_CATEGORIES("Manage categories"),
         MANAGE_PRODUCTS("Manage products"),
+        MANAGE_REQUESTS("Manage requests"),
         LOGOUT("Log out"),
         EXIT("Exit"),
         BACK("Back");
@@ -40,6 +41,7 @@ public class CLIProfilePhase {
             ArrayList<ProfileChoice> disabledOptions = new ArrayList<>();
             if (user.getRole() != Role.ADMIN) {
                 disabledOptions.add(ProfileChoice.MANAGE_USERS);
+                disabledOptions.add(ProfileChoice.MANAGE_REQUESTS);
             }
             if (user.getRole() == Role.BUYER) {
                 disabledOptions.add(ProfileChoice.MANAGE_PRODUCTS);
@@ -61,6 +63,7 @@ public class CLIProfilePhase {
                     new CLIManageCategories(user.getRole() != Role.ADMIN);
                 }
                 case MANAGE_PRODUCTS -> new CLIManageProducts(user);
+                case MANAGE_REQUESTS -> new CLIManageRequests();
                 case LOGOUT -> {
                     throw new LoggedOutExeption();
                 }

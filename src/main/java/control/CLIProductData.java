@@ -111,7 +111,7 @@ public class CLIProductData {
                 CLIView.info("Status: " + product.getStatus());
                 CLIView.info("Category: " + product.getCategoryName());
                 CLIView.info("Seller: " + product.getSeller().getUsername());
-                CLIView.info("Inventory status: (IN_STOCK / OUT_OF_STOCK)" + product.getInventoryStatus());
+                CLIView.info("Inventory status: " + product.getInventoryStatus());
                 CLIView.info("Properties: ");
                 if (this.product.getValidPropertiesAsMap().isEmpty()) {
                     CLIView.sortedList(
